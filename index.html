@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MiddleRent – Web Demo</title>
+<style>
+  :root{
+    --primary:#2e6fe0; --bg:#f7f8fb; --text:#111; --muted:#6b7280; --card:#fff;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .app{max-width:1024px;margin:0 auto;padding:16px}
+  header{display:flex;gap:10px;align-items:center;margin:6px 0 14px}
+  .logo{width:34px;height:34px;display:grid;place-items:center;background:var(--primary);color:#fff;border-radius:10px;font-weight:700}
+  .brand{font-weight:800;letter-spacing:.2px}
+  .hidden{display:none}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;background:var(--primary);color:#fff;padding:12px 16px;border-radius:12px;font-weight:600;cursor:pointer}
+  .btn.secondary{background:#e5e7eb;color:#111}
+  .btn.ghost{background:transparent;border:1px solid #dde3ee;color:#111}
+  .grid{display:grid;gap:14px}
+  @media(min-width:680px){ .grid.cols-2{grid-template-columns:1fr 1fr} .grid.cols-3{grid-template-columns:repeat(3,1fr)} }
+  input, select{width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px}
+  .list .item{overflow:hidden}
+  .thumb{aspect-ratio:16/9;width:100%;object-fit:cover;border-top-left-radius:var(--radius);border-top-right-radius:var(--radius)}
+  .item .content{padding:12px 14px}
+  .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1f3fbf;font-size:12px;font-weight:600}
+  .row{display:flex;gap:10px;align-items:center}
+  .space{flex:1}
+  .muted{color:var(--muted)}
+  .pill{background:#f3f4f6;border-radius:999px;padding:6px 10px;font-size:12px}
+  /* pages */
+  .page{display:none;animation:fade .2s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1}}
+  /* chat */
+  .chat{height:65vh;display:flex;flex-direction:column}
+  .messages{flex:1;overflow:auto;padding:12px}
+  .bubble{max-width:72%;padding:10px 12px;border-radius:14px;margin:6px 0;line-height:1.35}
+  .me{background:#dbeafe;margin-left:auto}
+  .them{background:#eef2f7}
+  .composer{display:flex;gap:8px;padding:8px;border-top:1px solid #e8edf6}
+  .composer input{flex:1}
+  .back{background:transparent;border:none;font-weight:600;color:var(--primary);cursor:pointer}
+  .gallery{display:flex;gap:8px;overflow:auto;padding:8px}
+  .gallery img{height:120px;border-radius:12px}
+  .footer-nav{position:sticky;bottom:0;margin-top:16px;display:flex;gap:10px;background:transparent;justify-content:center}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">🏠</div>
+    <div class="brand">MiddleRent</div>
+    <div class="space"></div>
+    <button class="btn ghost" id="gotoLogin">Login</button>
+  </header>
+
+  <!-- LOGIN PAGE -->
+  <section id="page-login" class="page active">
+    <div class="card" style="max-width:520px;margin:32px auto;padding:22px">
+      <h2 style="margin:4px 0 10px">Welcome</h2>
+      <p class="muted">Login to continue (demo only)</p>
+      <div class="grid">
+        <div>
+          <label class="muted">Phone number</label>
+          <input id="phone" placeholder="Enter mobile"/>
+        </div>
+        <button class="btn" id="loginBtn">Continue</button>
+        <button class="btn secondary" id="loginSkip">Continue with Gmail (demo)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOME PAGE -->
+  <section id="page-home" class="page">
+    <div class="toolbar">
+      <input id="q" placeholder="Search location or title"/>
+      <select id="city">
+        <option value="">All cities</option>
+      </select>
+      <select id="budget">
+        <option value="">Any budget</option>
+        <option value="0-10000">₹0–10k</option>
+        <option value="10001-20000">₹10k–20k</option>
+        <option value="20001-40000">₹20k–40k</option>
+        <option value="40001-100000">₹40k+</option>
+      </select>
+    </div>
+
+    <div id="list" class="grid cols-2 list"></div>
+
+    <div class="footer-nav">
+      <button class="btn ghost" id="goSaved">Saved</button>
+      <button class="btn ghost" id="goProfile">Profile</button>
+    </div>
+  </section>
+
+  <!-- DETAILS PAGE -->
+  <section id="page-details" class="page">
+    <button class="back" id="backHome">← Back</button>
+    <div id="detailsCard" class="card" style="margin-top:10px;padding-bottom:14px"></div>
+  </section>
+
+  <!-- CHAT PAGE -->
+  <section id="page-chat" class="page">
+    <button class="back" id="backDetails">← Back</button>
+    <div class="card chat">
+      <div class="row" style="padding:12px;border-bottom:1px solid #e8edf6">
+        <strong id="chatTitle">Chat</strong>
+        <span class="space"></span><span class="pill">Owner</span>
+      </div>
+      <div id="messages" class="messages"></div>
+      <div class="composer">
+        <input id="msg" placeholder="Type a message"/>
+        <button class="btn" id="send">Send</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ---------- Dummy Data ---------- */
+const properties = [
+  {
+    id:'p1',
+    title:'1 BHK',
+    city:'Gurgaon',
+    area:'DLF Phase V',
+    price:12000,
+    deposit:30000,
+    photos:[
+      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200',
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200',
+      'https://images.unsplash.com/photo-1505691723518-36a5ac3b2d53?q=80&w=1200'
+    ],
+    facilities:['WiFi','Kitchen','Parking'],
+    familyOnly:true, pets:false
+  },
+  {
+    id:'p2',
+    title:'2 BHK',
+    city:'Jaipur',
+    area:'Vaishali Nagar',
+    price:18000,
+    deposit:40000,
+    photos:[
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200',
+      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200'
+    ],
+    facilities:['Balcony','Geyser','Parking'],
+    familyOnly:false, pets:true
+  },
+  {
+    id:'p3',
+    title:'Room in 3 BHK (Shared)',
+    city:'Lucknow',
+    area:'Gomti Nagar',
+    price:8000,
+    deposit:15000,
+    photos:[
+      'https://images.unsplash.com/photo-1505691723518-36a5ac3b2d53?q=80&w=1200'
+    ],
+    facilities:['AC','Wardrobe','Laundry'],
+    familyOnly:false, pets:false
+  }
+];
+
+/* ---------- Helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const show = id => document.querySelectorAll('.page').forEach(p=>p.id===id?p.classList.add('active'):p.classList.remove('active'));
+const money = n => '₹'+n.toLocaleString('en-IN');
+
+/* ---------- Login ---------- */
+$('#gotoLogin').onclick = ()=>show('page-login');
+$('#loginBtn').onclick = $('#loginSkip').onclick = ()=>{
+  loadCities();
+  renderList();
+  show('page-home');
+};
+
+/* ---------- Home/List ---------- */
+function loadCities(){
+  const unique = [...new Set(properties.map(p=>p.city))];
+  $('#city').innerHTML = `<option value="">All cities</option>` + unique.map(c=>`<option>${c}</option>`).join('');
+}
+
+function withinBudget(p, slab){
+  if(!slab) return true;
+  const [a,b] = slab.split('-').map(Number);
+  if(!b) return p.price>=a;
+  return p.price>=a && p.price<=b;
+}
+
+function renderList(){
+  const q = $('#q').value.toLowerCase().trim();
+  const city = $('#city').value;
+  const budget = $('#budget').value;
+
+  const items = properties.filter(p =>
+    (!city || p.city===city) &&
+    withinBudget(p, budget) &&
+    (p.title.toLowerCase().includes(q) || p.area.toLowerCase().includes(q) || p.city.toLowerCase().includes(q))
+  );
+
+  $('#list').innerHTML = items.map(p=>`
+    <div class="card item">
+      <img class="thumb" src="${p.photos[0]}" alt="">
+      <div class="content">
+        <div class="row">
+          <strong>${p.title}</strong>
+          <span class="space"></span>
+          <span class="badge">${money(p.price)}/month</span>
+        </div>
+        <div class="muted" style="margin-top:4px">${p.area}, ${p.city}</div>
+        <div style="margin:8px 0">${p.facilities.slice(0,3).map(x=>`<span class="pill">${x}</span>`).join(' ')}</div>
+        <div class="row">
+          <button class="btn" onclick="openDetails('${p.id}')">View</button>
+          <button class="btn secondary" onclick="startChat('${p.id}')">Chat</button>
+        </div>
+      </div>
+    </div>
+  `).join('') || `<div class="muted">No properties match filters.</div>`;
+}
+
+$('#q').oninput = renderList;
+$('#city').onchange = renderList;
+$('#budget').onchange = renderList;
+
+/* ---------- Details ---------- */
+function openDetails(id){
+  const p = properties.find(x=>x.id===id);
+  const el = $('#detailsCard');
+  el.innerHTML = `
+    <div class="gallery">${p.photos.map(u=>`<img src="${u}" alt="">`).join('')}</div>
+    <div style="padding:14px 16px">
+      <div class="row">
+        <h2 style="margin:0">${p.title}</h2>
+        <span class="space"></span>
+        <span class="badge">${money(p.price)}/month</span>
+      </div>
+      <div class="muted" style="margin:6px 0">${p.area}, ${p.city}</div>
+      <div class="row" style="gap:8px;margin:8px 0">
+        <span class="pill">Deposit: ${money(p.deposit)}</span>
+        <span class="pill">${p.familyOnly ? 'Family only' : 'Bachelors allowed'}</span>
+        <span class="pill">${p.pets ? 'Pets allowed' : 'No pets'}</span>
+      </div>
+      <div style="margin:10px 0"><strong>Facilities:</strong> ${p.facilities.join(' · ')}</div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" onclick="startChat('${p.id}')">Chat with owner</button>
+        <button class="btn secondary" onclick="show('page-home')">Close</button>
+      </div>
+    </div>
+  `;
+  show('page-details');
+}
+$('#backHome').onclick = ()=>show('page-home');
+
+/* ---------- Chat ---------- */
+let currentProp = null;
+function startChat(id){
+  currentProp = properties.find(x=>x.id===id);
+  $('#chatTitle').textContent = currentProp.title + ' • ' + currentProp.city;
+  const msgs = [
+    {me:false,text:'Hi, I am interested in this property.'},
+    {me:false,text:'Can I visit the place tomorrow?'},
+    {me:true,text:'Sure, we can meet tomorrow at 11 AM.'},
+  ];
+  $('#messages').innerHTML = msgs.map(m=>`<div class="bubble ${m.me?'me':'them'}">${m.text}</div>`).join('');
+  show('page-chat');
+}
+$('#backDetails').onclick = ()=>show('page-details');
+$('#send').onclick = ()=>{
+  const t = $('#msg').value.trim();
+  if(!t) return;
+  $('#messages').insertAdjacentHTML('beforeend', `<div class="bubble me">${t}</div>`);
+  $('#msg').value='';
+  // simple auto-reply demo
+  setTimeout(()=>$('#messages').insertAdjacentHTML('beforeend', `<div class="bubble them">Noted 👍</div>`), 400);
+  const box = $('#messages'); box.scrollTop = box.scrollHeight;
+};
+
+/* allow header login button to bring user back */
+document.getElementById('gotoLogin').onclick = ()=>show('page-login');
+</script>
+</body>
+</html>
+
+
